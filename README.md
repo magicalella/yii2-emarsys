@@ -1,5 +1,5 @@
-# yii2-magorest
-Magorest component for Yii 2 framework
+# yii2-emarsys
+Emarsys component for Yii 2 framework
 
 Installation
 ------------
@@ -9,13 +9,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Run
 
 ```
-composer require "magicalella/yii2-magorest" "*"
+composer require "magicalella/yii2-emarsys" "*"
 ```
 
 or add
 
 ```
-"magicalella/yii2-magorest": "*"
+"magicalella/yii2-emarsys": "*"
 ```
 
 to the require section of your `composer.json` file.
@@ -27,8 +27,8 @@ Usage
 ```php
 'components' => [
     // ...
-    'magorest' => [
-        'class' => 'magicalella\magorest\Magorest',
+    'emarsys' => [
+        'class' => 'magicalella\emarsys\Emarsys',
         'user' => 'xxxxxx',
         'password' => 'xxxxxx',
         'endpoint' => 'xxxxxx'
@@ -36,10 +36,10 @@ Usage
 ]
 ```
 
-2. Add new contact to MAGO
+2. Add new contact to EMARSYS
 ```php
-$magorest = Yii::$app->magorest;
-$result = $magorest->post('getdata/set-customers',$data)
+$emarsys = Yii::$app->emarsys;
+$result = $emarsys->post('getdata/set-customers',$data)
 );
 ```
 

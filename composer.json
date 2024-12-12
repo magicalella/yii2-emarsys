@@ -1,6 +1,6 @@
 {
-  "name": "magicalella/yii2-magorest",
-  "description": "MAGO component for Yii 2 framework",
+  "name": "magicalella/yii2-emarsys",
+  "description": "EMARSYS component for Yii 2 framework",
   "type": "yii2-extension",
   "license": "MIT",
   "minimum-stability": "dev",
@@ -20,7 +20,7 @@
   },
   "autoload": {
     "psr-4": {
-      "magicalella\\magorest\\": ""
+      "magicalella\\emarsys\\": ""
     }
   }
 }

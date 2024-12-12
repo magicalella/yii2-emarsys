@@ -1,19 +1,19 @@
 <?php
 
-namespace magicalella\magorest;
+namespace magicalella\emarsys;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\httpclient\Client;
 
 /**
- * Class Magorest
- * Magorest component
- * @package magicalella\magorest
+ * Class Emarsys
+ * Emarsys component
+ * @package magicalella\emarsys
  *
- * @author Mariusz Stróż <info@inwave.pl>
+ * @author Raffaella Lollini
  */
-class Magorest extends Component
+class Emarsys extends Component
 {
 
     /**
@@ -89,15 +89,15 @@ class Magorest extends Component
         if ($response->isOk) {
             if (!($this->apiKey = $response->data)) {
                 Yii::$app->session->setFlash('error', 'ApiKey non ricevuta');
-                Yii::error(sprintf('ERRORE CHIAMATA ApiKey MAGO :  ApiKey non ricevuta'), __METHOD__);
-                $this->log .= ' ERRORE CHIAMATA ApiKey MAGO :  ApiKey non ricevuta ';
+                Yii::error(sprintf('ERRORE CHIAMATA ApiKey EMARSYS :  ApiKey non ricevuta'), __METHOD__);
+                $this->log .= ' ERRORE CHIAMATA ApiKey EMARSYS :  ApiKey non ricevuta ';
                 return false;
             }
             return true;
         }else {
             //testare CODE del response checkStatusCode()
             $errore = $this->checkStatusCode($response);
-            $messaggio = sprintf('ERRORE CHIAMATA ApiKey MAGO :  Impossibile connettersi a MAGO %s',$messaggio);
+            $messaggio = sprintf('ERRORE CHIAMATA ApiKey EMARSYS :  Impossibile connettersi a EMARSYS %s',$messaggio);
             Yii::error($messaggio, __METHOD__);
             $this->log .= $messaggio;
             return false;
@@ -121,8 +121,8 @@ class Magorest extends Component
         
         if (!$response->isOk) {
             //testare CODE del response checkStatusCode()
-            Yii::error(sprintf('ERRORE CHIAMATA MAGO %s data : ',$url,print_r($data, true)), __METHOD__);
-            $this->log .= ' ERRORE CHIAMATA MAGO : '.$url;
+            Yii::error(sprintf('ERRORE CHIAMATA EMARSYS %s data : ',$url,print_r($data, true)), __METHOD__);
+            $this->log .= ' ERRORE CHIAMATA EMARSYS : '.$url;
         }
         
         return $response;
@@ -148,7 +148,7 @@ class Magorest extends Component
         
         if (!$response->isOk) {
             $errore = $this->checkStatusCode($response);
-            $messaggio = sprintf('ERRORE CHIAMATA LogOff MAGO :  URL: %s , ERRORE: %s ',$url , $errore );
+            $messaggio = sprintf('ERRORE CHIAMATA LogOff EMARSYS :  URL: %s , ERRORE: %s ',$url , $errore );
             Yii::error($messaggio, __METHOD__);
             $this->log .= $messaggio ;
         }
@@ -179,7 +179,7 @@ class Magorest extends Component
     }
     
     /**
-     * Call MAGO function POST
+     * Call EMARSYS function POST
      * @param string $call Name of API function to call
      * @param array $data
      * @return response [[
@@ -232,7 +232,7 @@ class Magorest extends Component
     }
     
     /**
-     * Call MAGO function GET
+     * Call EMARSYS function GET
      * @param string $call Name of API function to call
      * @param array $data
      * @return response [[
@@ -334,7 +334,7 @@ class Magorest extends Component
         if (!$response->isOk) {
             $status = Self::STATUS_ERROR;
             $errore = $this->checkStatusCode($response);
-            $messaggio = sprintf('ERRORE CHIAMATA CURL MAGO :  URL: %s , ERRORE: %s , DATA json: %s ',$url , $errore ,print_r($data,true) );
+            $messaggio = sprintf('ERRORE CHIAMATA CURL EMARSYS :  URL: %s , ERRORE: %s , DATA json: %s ',$url , $errore ,print_r($data,true) );
             Yii::error($messaggio, __METHOD__);
             $this->log = $messaggio ;
         }else{
