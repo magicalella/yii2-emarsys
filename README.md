@@ -29,9 +29,10 @@ Usage
     // ...
     'emarsys' => [
         'class' => 'magicalella\emarsys\Emarsys',
-        'user' => 'xxxxxx',
-        'password' => 'xxxxxx',
-        'endpoint' => 'xxxxxx'
+        'client_id' => 'xxxxxx',
+        'client_secret' => 'xxxxxx',
+        'endpoint_autentication' => 'xxxxxx',
+        'endpoint_api' => 'xxxxxx'
     ],
 ]
 ```

@@ -19,22 +19,29 @@ class Emarsys extends Component
     /**
      * @var string 
      */
-    public $user;
+    public $client_id;
 
     /**
      * @var string 
      */
-    public $password;
+    public $client_secret;
+    
     
     /**
      * @var string
      */
-    public $endpoint;
+    public $endpoint_autentication;
+    
+    /**
+     * @var string
+     */
+    public $endpoint_api;
 
     /**
      * @var retrive after login
      */
-    public $apiKey;
+    public $access_token = false;
+    public $access_token_expire = false; 
     
     private $client;
     
@@ -48,16 +55,20 @@ class Emarsys extends Component
      */
     public function init()
     {
-        if (!$this->user) {
-            throw new InvalidConfigException('$user not set');
+        if (!$this->client_id) {
+            throw new InvalidConfigException('$client_id not set');
         }
 
-        if (!$this->password) {
-            throw new InvalidConfigException('$password not set');
+        if (!$this->client_secret) {
+            throw new InvalidConfigException('$client_secret not set');
         }
         
-        if (!$this->endpoint) {
-            throw new InvalidConfigException('$endpoint not set');
+        if (!$this->endpoint_autentication) {
+            throw new InvalidConfigException('$endpoint_autentication not set');
+        }
+        
+        if (!$this->endpoint_api) {
+            throw new InvalidConfigException('$endpoint_api not set');
         }
         
         
@@ -67,93 +78,98 @@ class Emarsys extends Component
     /**
     Login recupera ApiKey
      */
-    private function getApiKey(){
+    private function getAccessToken(){
         $data = [];
         $data['username'] = $this->user;
         $data['password'] = $this->password;
         $json = json_encode($data);
         $errore ='';
         $messaggio = '';
-        
+        $key = base64_encode("$this->client_id:$this->client_secret");
         $request = $this->client->createRequest()
             ->setMethod('POST')
-            ->setUrl('loginmanager/login')
+            ->setUrl($this->endpoint_autentication)
             ->setFormat(Client::FORMAT_JSON)
             ->setHeaders([
-                'Content-Type' => 'application/json;charset=UTF-8',
+                'content-type' => 'application/x-www-form-urlencoded;charset=UTF-8',
+                'Authorization' => 'Basic '.$key ,
                 'Accept' => 'application/json' ,
             ])
-            ->setContent($json);
+            ->setData([
+                'grant_type' => 'client_credentials',
+            ]);
         $response = $request->send();
         
         if ($response->isOk) {
-            if (!($this->apiKey = $response->data)) {
-                Yii::$app->session->setFlash('error', 'ApiKey non ricevuta');
-                Yii::error(sprintf('ERRORE CHIAMATA ApiKey EMARSYS :  ApiKey non ricevuta'), __METHOD__);
-                $this->log .= ' ERRORE CHIAMATA ApiKey EMARSYS :  ApiKey non ricevuta ';
+            if (!($this->access_token = $response->data['access_token'])) {
+                Yii::$app->session->setFlash('error', 'AccessToken non ricevuta');
+                Yii::error(sprintf('ERRORE CHIAMATA AccessToken EMARSYS :  AccessToken non ricevuta'), __METHOD__);
+                $this->log .= ' ERRORE CHIAMATA AccessToken EMARSYS :  AccessToken non ricevuta ';
                 return false;
+            }else{
+                $this->access_token_expire = $response->data['expires_in'];
             }
             return true;
         }else {
             //testare CODE del response checkStatusCode()
             $errore = $this->checkStatusCode($response);
-            $messaggio = sprintf('ERRORE CHIAMATA ApiKey EMARSYS :  Impossibile connettersi a EMARSYS %s',$messaggio);
+            $messaggio = sprintf('ERRORE CHIAMATA AccessToken EMARSYS :  Impossibile connettersi a EMARSYS %s',$messaggio);
             Yii::error($messaggio, __METHOD__);
             $this->log .= $messaggio;
             return false;
         }
     }
     
-    private function checkLoginIsValid()
-    {
-        $url = 'loginmanager/loginisvalid/'.$this->apiKey;
-        $request = $this->client->createRequest()
-            ->setMethod('GET')
-            ->setUrl($url)
-            ->setFormat(Client::FORMAT_JSON)
-            ->setHeaders([
-                'Accept: application/json, application/json',
-                'Content-Type: application/json;charset=UTF-8',
-                'ApiKey: ' . $this->apiKey
-            ])
-            ->setContent($data);
-        $response = $request->send();
-        
-        if (!$response->isOk) {
-            //testare CODE del response checkStatusCode()
-            Yii::error(sprintf('ERRORE CHIAMATA EMARSYS %s data : ',$url,print_r($data, true)), __METHOD__);
-            $this->log .= ' ERRORE CHIAMATA EMARSYS : '.$url;
-        }
-        
-        return $response;
-    }
+    // private function checkLoginIsValid()
+    // {
+    //     $url = 'loginmanager/loginisvalid/'.$this->access_token;
+    //     $request = $this->client->createRequest()
+    //         ->setMethod('GET')
+    //         ->setUrl($url)
+    //         ->setFormat(Client::FORMAT_JSON)
+    //         ->setHeaders([
+    //             'Accept: application/json, application/json',
+    //             'Content-Type' => 'application/json;charset=UTF-8',
+    //             'ApiKey: ' . $this->access_token
+    //         ])
+    //         ->setContent($data);
+    //     $response = $request->send();
+    //     
+    //     if (!$response->isOk) {
+    //         //testare CODE del response checkStatusCode()
+    //         Yii::error(sprintf('ERRORE CHIAMATA EMARSYS %s data : ',$url,print_r($data, true)), __METHOD__);
+    //         $this->log .= ' ERRORE CHIAMATA EMARSYS : '.$url;
+    //     }
+    //     
+    //     return $response;
+    // }
     
-    public function checkLogOff()
-    {
-        $errore ='';
-        $messaggio = '';
-        $url = 'loginmanager/logoff/'.$this->apiKey;
-        
-        $request = $this->client->createRequest()
-            ->setMethod('GET')
-            ->setUrl($url)
-            ->setFormat(Client::FORMAT_JSON)
-            ->setHeaders([
-                'Accept: application/json, application/json',
-                'Content-Type: application/json;charset=UTF-8',
-                'ApiKey: ' . $this->apiKey
-            ]);
-            //->setContent($data);
-        $response = $request->send();
-        
-        if (!$response->isOk) {
-            $errore = $this->checkStatusCode($response);
-            $messaggio = sprintf('ERRORE CHIAMATA LogOff EMARSYS :  URL: %s , ERRORE: %s ',$url , $errore );
-            Yii::error($messaggio, __METHOD__);
-            $this->log .= $messaggio ;
-        }
-        return $response;
-    }
+    // public function checkLogOff()
+    // {
+    //     $errore ='';
+    //     $messaggio = '';
+    //     $url = 'loginmanager/logoff/'.$this->access_token;
+    //     
+    //     $request = $this->client->createRequest()
+    //         ->setMethod('GET')
+    //         ->setUrl($url)
+    //         ->setFormat(Client::FORMAT_JSON)
+    //         ->setHeaders([
+    //             'Accept: application/json, application/json',
+    //             'Content-Type' => 'application/json;charset=UTF-8',
+    //             'ApiKey: ' . $this->access_token
+    //         ]);
+    //         //->setContent($data);
+    //     $response = $request->send();
+    //     
+    //     if (!$response->isOk) {
+    //         $errore = $this->checkStatusCode($response);
+    //         $messaggio = sprintf('ERRORE CHIAMATA LogOff EMARSYS :  URL: %s , ERRORE: %s ',$url , $errore );
+    //         Yii::error($messaggio, __METHOD__);
+    //         $this->log .= $messaggio ;
+    //     }
+    //     return $response;
+    // }
     
     
     /**
@@ -203,8 +219,8 @@ class Emarsys extends Component
                 ],
             ]
         );
-        if(!$this->apiKey){
-            $this->getApiKey();
+        if(!$this->access_token){
+            $this->getAccessToken();
         }
         
         $json = json_encode($data);
@@ -257,8 +273,8 @@ class Emarsys extends Component
                 ],
             ]
         );
-        if(!$this->apiKey){
-            $this->getApiKey();
+        if(!$this->access_token){
+            $this->getAccessToken();
         }
         $json = json_encode($data);
         $response = $this->curl($this->endpoint . $call, $json,'GET');
@@ -304,27 +320,14 @@ class Emarsys extends Component
         $result = [];
         $content = [];
         
-//         $ch = curl_init($url);
-//         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $type_request);
-//         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-//         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-//         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-//                 'Accept: application/json, application/json',
-//                 'Content-Type: application/json;charset=UTF-8',
-//                 'ApiKey: ' . $this->apiKey
-//             )
-//         );
-// 
-//         return curl_exec($ch);
-        
         $request = $this->client->createRequest()
             ->setMethod($method)
             ->setUrl($url)
             ->setFormat(Client::FORMAT_JSON)
             ->setHeaders([
-                'Accept: application/json, application/json',
-                'Content-Type: application/json;charset=UTF-8',
-                'ApiKey: ' . $this->apiKey
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json;charset=UTF-8',
+                'Authorization' => 'Bearer '.$this->access_token ,
             ])
             ->setContent($data);
         $response = $request->send();
