@@ -80,20 +80,17 @@ class Emarsys extends Component
      */
     private function getAccessToken(){
         $data = [];
-        $data['username'] = $this->user;
-        $data['password'] = $this->password;
         $json = json_encode($data);
         $errore ='';
         $messaggio = '';
         $key = base64_encode("$this->client_id:$this->client_secret");
+        
         $request = $this->client->createRequest()
             ->setMethod('POST')
             ->setUrl($this->endpoint_autentication)
-            ->setFormat(Client::FORMAT_JSON)
             ->setHeaders([
-                'content-type' => 'application/x-www-form-urlencoded;charset=UTF-8',
+                'content-type' => 'application/x-www-form-urlencoded',
                 'Authorization' => 'Basic '.$key ,
-                'Accept' => 'application/json' ,
             ])
             ->setData([
                 'grant_type' => 'client_credentials',
@@ -113,7 +110,7 @@ class Emarsys extends Component
         }else {
             //testare CODE del response checkStatusCode()
             $errore = $this->checkStatusCode($response);
-            $messaggio = sprintf('ERRORE CHIAMATA AccessToken EMARSYS :  Impossibile connettersi a EMARSYS %s',$messaggio);
+            $messaggio = sprintf('ERRORE CHIAMATA AccessToken EMARSYS :  Impossibile connettersi a EMARSYS %s',$errore);
             Yii::error($messaggio, __METHOD__);
             $this->log .= $messaggio;
             return false;
@@ -213,7 +210,7 @@ class Emarsys extends Component
         $content = [];
         $this->client = new Client(
             [
-                'baseUrl' => $this->endpoint ,
+                'baseUrl' => $this->endpoint_api ,
                 'responseConfig' => [
                     'format' => Client::FORMAT_JSON
                 ],
@@ -224,7 +221,11 @@ class Emarsys extends Component
         }
         
         $json = json_encode($data);
-        $response = $this->curl($this->endpoint . $call, $json,'POST');
+        // echo $this->endpoint_api . $call.' ';
+        // echo $json;
+        // echo $this->access_token;
+        // exit();
+        $response = $this->curl($this->endpoint_api . $call, $json,'POST');
         
         if($response['status'] == Self::STATUS_SUCCESS){
             //la chiamata può restituire oggetto desiderato o errori di post 
@@ -267,7 +268,7 @@ class Emarsys extends Component
         $content = [];
         $this->client = new Client(
             [
-                'baseUrl' => $this->endpoint ,
+                'baseUrl' => $this->endpoint_api ,
                 'responseConfig' => [
                     'format' => Client::FORMAT_JSON
                 ],
@@ -277,7 +278,7 @@ class Emarsys extends Component
             $this->getAccessToken();
         }
         $json = json_encode($data);
-        $response = $this->curl($this->endpoint . $call, $json,'GET');
+        $response = $this->curl($this->endpoint_api . $call, $json,'GET');
         
         if($response['status'] == Self::STATUS_SUCCESS){
             //la chiamata può restituire oggetto desiderato o errori di post 
@@ -331,9 +332,13 @@ class Emarsys extends Component
             ])
             ->setContent($data);
         $response = $request->send();
+        // echo '<pre>';
         // echo $url.' ';
+        // print_r($data);
         // print_r($response);
+        // echo '</pre>';
         // exit();
+        
         if (!$response->isOk) {
             $status = Self::STATUS_ERROR;
             $errore = $this->checkStatusCode($response);
